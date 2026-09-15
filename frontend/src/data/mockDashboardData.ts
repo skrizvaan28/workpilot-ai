@@ -10,6 +10,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Today, 4:00 PM',
     progress: 85,
     aiPriorityScore: 98,
+    urgency: 'due_today',
     aiReasoning: 'Critical blocker for Enterprise client sign-off. High stakeholder visibility.',
     assignee: {
       name: 'Rizvaan S.',
@@ -25,6 +26,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Today, 6:30 PM',
     progress: 60,
     aiPriorityScore: 94,
+    urgency: 'due_today',
     aiReasoning: 'AI extracted 14 sub-tasks; needs final architectural review.',
     assignee: {
       name: 'Sarah Chen',
@@ -40,6 +42,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Tomorrow, 11:00 AM',
     progress: 30,
     aiPriorityScore: 82,
+    urgency: 'upcoming',
     aiReasoning: 'Traffic spike projected for Thursday demo; prevent 429 errors.',
     assignee: {
       name: 'David Kim',
@@ -55,6 +58,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Sep 17, 2026',
     progress: 45,
     aiPriorityScore: 79,
+    urgency: 'upcoming',
     aiReasoning: 'Unlocks conversational doc Q&A for cross-team knowledge sharing.',
     assignee: {
       name: 'Elena Rostova',
@@ -70,6 +74,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Yesterday, 5:00 PM',
     progress: 90,
     aiPriorityScore: 91,
+    urgency: 'overdue',
     aiReasoning: 'Payment cycle penalty window starts in 24 hours.',
     assignee: {
       name: 'Marcus Vance',
@@ -85,6 +90,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Sep 13, 2026',
     progress: 100,
     aiPriorityScore: 68,
+    urgency: 'none',
     aiReasoning: 'Completed ahead of schedule. User feedback score 4.9/5.',
     assignee: {
       name: 'Rizvaan S.',
@@ -100,6 +106,7 @@ export const mockTasks: Task[] = [
     dueDate: 'Sep 12, 2026',
     progress: 100,
     aiPriorityScore: 74,
+    urgency: 'none',
     aiReasoning: 'Deploys proactive status updates to team channel automatically.',
     assignee: {
       name: 'Sarah Chen',

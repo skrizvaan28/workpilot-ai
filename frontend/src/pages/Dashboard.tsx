@@ -11,6 +11,7 @@ import { DocumentsView } from '../components/dashboard/DocumentsView';
 import { TeamView } from '../components/dashboard/TeamView';
 import { AnalyticsView } from '../components/dashboard/AnalyticsView';
 import { SettingsView } from '../components/dashboard/SettingsView';
+import { AlertInbox } from '../components/dashboard/AlertInbox';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
 import { UploadDocumentModal } from '../components/modals/UploadDocumentModal';
 import { AskAIModal } from '../components/modals/AskAIModal';
@@ -114,6 +115,11 @@ export default function Dashboard() {
     98
   );
 
+  // Alert Inbox: count active (non-completed, non-none urgency) tasks
+  const alertCount = tasks.filter(
+    (t) => t.urgency !== 'none' && t.status !== 'completed'
+  ).length;
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
@@ -144,6 +150,7 @@ export default function Dashboard() {
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         taskCount={pendingCount}
+        alertCount={alertCount}
       />
 
       {/* Main Content Area */}
@@ -229,6 +236,13 @@ export default function Dashboard() {
                 searchFilter={searchQuery}
               />
             </div>
+          )}
+
+          {activeTab === 'alerts' && (
+            <AlertInbox
+              tasks={tasks}
+              onNavigateToTasks={() => setActiveTab('tasks')}
+            />
           )}
 
           {activeTab === 'documents' && (

@@ -11,6 +11,7 @@ import {
   Zap,
   X,
   ExternalLink,
+  Bell,
 } from 'lucide-react';
 
 interface LeftSidebarProps {
@@ -19,6 +20,7 @@ interface LeftSidebarProps {
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   taskCount: number;
+  alertCount: number;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -27,10 +29,12 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   isMobileOpen,
   onCloseMobile,
   taskCount,
+  alertCount,
 }) => {
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tasks', label: 'My Tasks', icon: CheckSquare, badge: taskCount },
+    { id: 'alerts', label: 'Alert Inbox', icon: Bell, alertBadge: alertCount },
     { id: 'documents', label: 'Documents', icon: FileText, tag: 'RAG' },
     { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, highlight: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -140,6 +144,18 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       }`}
                     >
                       {item.badge}
+                    </span>
+                  )}
+
+                  {item.alertBadge !== undefined && item.alertBadge > 0 && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-mono font-bold ${
+                        isActive
+                          ? 'bg-rose-400 text-slate-950'
+                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                      }`}
+                    >
+                      {item.alertBadge}
                     </span>
                   )}
 

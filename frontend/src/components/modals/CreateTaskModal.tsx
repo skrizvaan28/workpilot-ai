@@ -47,6 +47,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       progress: 0,
       aiPriorityScore: calculatedAiScore,
       aiReasoning: aiReason,
+      // Urgency defaults to 'none' for new tasks; will be derived by
+      // the backend once real task CRUD endpoints are live.
+      urgency: 'none',
       assignee: {
         name: 'Rizvaan S.',
         avatar: 'RS',

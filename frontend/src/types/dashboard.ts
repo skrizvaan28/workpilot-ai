@@ -1,5 +1,6 @@
 export type TaskPriority = 'high' | 'medium' | 'low';
 export type TaskStatus = 'in_progress' | 'pending' | 'completed' | 'overdue';
+export type TaskUrgency = 'overdue' | 'due_today' | 'upcoming' | 'none';
 
 export interface Task {
   id: string;
@@ -11,6 +12,7 @@ export interface Task {
   progress: number;
   aiPriorityScore: number;
   aiReasoning: string;
+  urgency: TaskUrgency;
   assignee?: {
     name: string;
     avatar: string;
