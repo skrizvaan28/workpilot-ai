@@ -54,3 +54,20 @@ export interface DailyProductivity {
   plannedTasks: number;
   focusHours: number;
 }
+
+export interface TaskInsight {
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  deadline_risk: 'HIGH' | 'MEDIUM' | 'LOW';
+  urgency: 'HIGH' | 'MEDIUM' | 'LOW';
+  estimated_effort: 'Low' | 'Medium' | 'High';
+  completion_status: string;
+  recommended_action: string;
+  explanation: string;
+  risk_level: 'low' | 'medium' | 'high';
+  risk_score: number;
+  insight: string;
+  reason: string;
+  suggested_priority: 'low' | 'medium' | 'high';
+  likely_overdue: boolean;
+}
+

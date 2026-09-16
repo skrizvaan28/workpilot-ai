@@ -195,6 +195,7 @@ export default function Dashboard() {
               {/* 6. AI INSIGHT CARD */}
               <AIInsightCard
                 insights={mockInsights}
+                tasks={tasks}
                 onActionClick={(insight) => {
                   if (insight.type === 'improvement') {
                     setActiveTab('analytics');

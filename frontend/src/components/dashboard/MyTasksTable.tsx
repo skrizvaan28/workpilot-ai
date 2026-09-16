@@ -8,8 +8,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Tag,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Task, TaskPriority, TaskStatus } from '../../types/dashboard';
+import { AITaskInsightCard } from './AITaskInsightCard';
+import { useTaskInsight } from '../../lib/taskInsight';
 
 interface MyTasksTableProps {
   tasks: Task[];
@@ -17,6 +21,24 @@ interface MyTasksTableProps {
   onOpenCreateTask: () => void;
   searchFilter?: string;
 }
+
+const TaskInsightRow: React.FC<{ task: Task }> = ({ task }) => {
+  const { insight, loading, error, retry } = useTaskInsight(task);
+  return (
+    <tr className="bg-slate-950/90 border-b border-slate-800">
+      <td colSpan={6} className="p-3 sm:p-4">
+        <AITaskInsightCard
+          insight={insight}
+          loading={loading}
+          error={error}
+          onRetry={retry}
+          taskTitle={`[${task.id}] ${task.title}`}
+          compact
+        />
+      </td>
+    </tr>
+  );
+};
 
 export const MyTasksTable: React.FC<MyTasksTableProps> = ({
   tasks,
@@ -26,6 +48,7 @@ export const MyTasksTable: React.FC<MyTasksTableProps> = ({
 }) => {
   const [filterTab, setFilterTab] = useState<'all' | 'in_progress' | 'high_priority' | 'completed'>('all');
   const [sortBy, setSortBy] = useState<'ai_score' | 'due_date'>('ai_score');
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   // Filter tasks based on search & tab
   const filteredTasks = tasks.filter((task) => {
@@ -206,7 +229,7 @@ export const MyTasksTable: React.FC<MyTasksTableProps> = ({
               <th className="py-2.5 px-3 font-semibold">Status</th>
               <th className="py-2.5 px-3 font-semibold">Due Date</th>
               <th className="py-2.5 px-3 font-semibold w-32">Progress</th>
-              <th className="py-2.5 px-3 font-semibold">AI Priority Indicator</th>
+              <th className="py-2.5 px-3 font-semibold">AI Priority & Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60">
@@ -219,105 +242,127 @@ export const MyTasksTable: React.FC<MyTasksTableProps> = ({
             ) : (
               sortedTasks.map((task) => {
                 const isCompleted = task.status === 'completed';
+                const isExpanded = expandedTaskId === task.id;
 
                 return (
-                  <tr
-                    key={task.id}
-                    className={`group hover:bg-slate-800/40 transition-colors ${
-                      isCompleted ? 'opacity-60 bg-slate-950/20' : ''
-                    }`}
-                  >
-                    {/* Task Title & Checkbox */}
-                    <td className="py-3 px-3">
-                      <div className="flex items-start gap-2.5">
-                        <button
-                          onClick={() => onToggleTask(task.id)}
-                          className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center transition border ${
-                            isCompleted
-                              ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                              : 'border-slate-700 bg-slate-900 group-hover:border-amber-500'
-                          }`}
-                        >
-                          {isCompleted && <CheckCircle2 size={13} className="text-slate-950" />}
-                        </button>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono text-slate-400">
-                              {task.id}
-                            </span>
-                            <span
-                              className={`font-medium text-slate-100 ${
-                                isCompleted ? 'line-through text-slate-400' : ''
-                              }`}
-                            >
-                              {task.title}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
-                              <Tag size={10} /> {task.category}
-                            </span>
-                            {task.assignee && (
-                              <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                                • {task.assignee.name}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Priority */}
-                    <td className="py-3 px-3 whitespace-nowrap">
-                      {getPriorityBadge(task.priority)}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-3 px-3 whitespace-nowrap">
-                      {getStatusBadge(task.status)}
-                    </td>
-
-                    {/* Due Date */}
-                    <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-300 font-mono">
-                      {task.dueDate}
-                    </td>
-
-                    {/* Progress Bar */}
-                    <td className="py-3 px-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-mono">
-                          <span className="text-slate-400">{task.progress}%</span>
-                        </div>
-                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
+                  <React.Fragment key={task.id}>
+                    <tr
+                      className={`group hover:bg-slate-800/40 transition-colors ${
+                        isCompleted ? 'opacity-60 bg-slate-950/20' : ''
+                      } ${isExpanded ? 'bg-slate-800/30' : ''}`}
+                    >
+                      {/* Task Title & Checkbox */}
+                      <td className="py-3 px-3">
+                        <div className="flex items-start gap-2.5">
+                          <button
+                            onClick={() => onToggleTask(task.id)}
+                            className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center transition border ${
                               isCompleted
-                                ? 'bg-emerald-400'
-                                : task.progress > 70
-                                ? 'bg-amber-400'
-                                : 'bg-blue-400'
+                                ? 'bg-emerald-500 border-emerald-500 text-slate-950'
+                                : 'border-slate-700 bg-slate-900 group-hover:border-amber-500'
                             }`}
-                            style={{ width: `${task.progress}%` }}
-                          />
+                          >
+                            {isCompleted && <CheckCircle2 size={13} className="text-slate-950" />}
+                          </button>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {task.id}
+                              </span>
+                              <span
+                                className={`font-medium text-slate-100 ${
+                                  isCompleted ? 'line-through text-slate-400' : ''
+                                }`}
+                              >
+                                {task.title}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
+                                <Tag size={10} /> {task.category}
+                              </span>
+                              {task.assignee && (
+                                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                                  • {task.assignee.name}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* AI Priority Indicator */}
-                    <td className="py-3 px-3">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            <Sparkles size={10} />
-                            Score: {task.aiPriorityScore}/100
-                          </span>
+                      {/* Priority */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {getPriorityBadge(task.priority)}
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {getStatusBadge(task.status)}
+                      </td>
+
+                      {/* Due Date */}
+                      <td className="py-3 px-3 whitespace-nowrap text-xs text-slate-300 font-mono">
+                        {task.dueDate}
+                      </td>
+
+                      {/* Progress Bar */}
+                      <td className="py-3 px-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px] font-mono">
+                            <span className="text-slate-400">{task.progress}%</span>
+                          </div>
+                          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                isCompleted
+                                  ? 'bg-emerald-400'
+                                  : task.progress > 70
+                                  ? 'bg-amber-400'
+                                  : 'bg-blue-400'
+                              }`}
+                              style={{ width: `${task.progress}%` }}
+                            />
+                          </div>
                         </div>
-                        <p className="text-[11px] text-slate-400 max-w-xs truncate" title={task.aiReasoning}>
-                          {task.aiReasoning}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+
+                      {/* AI Priority Indicator & Insight Toggle Button */}
+                      <td className="py-3 px-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                <Sparkles size={10} />
+                                Score: {task.aiPriorityScore}/100
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 max-w-[180px] truncate" title={task.aiReasoning}>
+                              {task.aiReasoning}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTaskId((prev) => (prev === task.id ? null : task.id))}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition shrink-0 shadow-sm ${
+                              isExpanded
+                                ? 'bg-amber-500 text-slate-950 border-amber-400'
+                                : 'bg-slate-950/80 border-slate-700/80 text-slate-300 hover:border-amber-500/50 hover:text-amber-300'
+                            }`}
+                            title="Inspect AI Task Insight"
+                          >
+                            <Sparkles size={11} className={isExpanded ? 'text-slate-950' : 'text-amber-400'} />
+                            <span>{isExpanded ? 'Hide' : 'AI Insight'}</span>
+                            {isExpanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Expandable Live AI Task Insight Row */}
+                    {isExpanded && <TaskInsightRow task={task} />}
+                  </React.Fragment>
                 );
               })
             )}

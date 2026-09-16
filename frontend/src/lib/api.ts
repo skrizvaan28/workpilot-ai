@@ -27,7 +27,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(body.detail || "Request failed");
+    const detail = body.detail;
+    const message =
+      typeof detail === "string"
+        ? detail
+        : "AI insight temporarily unavailable. Please try again.";
+    throw new Error(message);
   }
 
   return res.json();
@@ -57,4 +62,40 @@ export const api = {
 
   me: () => request<UserProfile>("/users/me"),
   health: () => request<{ status: string; environment?: string }>("/health"),
+
+  taskInsight: (payload: TaskInsightPayload) =>
+    request<TaskInsightResult>("/ai/task-insight", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
+
+export interface TaskInsightPayload {
+  title: string;
+  description: string;
+  priority: string;
+  category: string;
+  due_date: string;
+  progress: number;
+  assignee: string;
+  urgency: string;
+  completed: boolean;
+  status?: string;
+}
+
+export interface TaskInsightResult {
+  priority: "HIGH" | "MEDIUM" | "LOW";
+  deadline_risk: "HIGH" | "MEDIUM" | "LOW";
+  urgency: "HIGH" | "MEDIUM" | "LOW";
+  estimated_effort: "Low" | "Medium" | "High";
+  completion_status: string;
+  recommended_action: string;
+  explanation: string;
+  risk_level: "low" | "medium" | "high";
+  risk_score: number;
+  insight: string;
+  reason: string;
+  suggested_priority: "low" | "medium" | "high";
+  likely_overdue: boolean;
+}
+
