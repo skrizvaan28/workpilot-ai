@@ -35,6 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(message);
   }
 
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -45,6 +46,69 @@ export interface UserProfile {
   role: string;
   is_active: boolean;
   created_at: string;
+}
+
+export interface Task {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string;
+  priority: "low" | "medium" | "high";
+  due_date: string | null;
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskAnalysis {
+  task_id: string;
+  summary: string;
+  suggested_priority: "low" | "medium" | "high";
+  estimated_effort: "Low" | "Medium" | "High";
+  suggested_subtasks: string[];
+  suggested_deadline: string;
+  potential_blockers: string[];
+  recommended_next_action: string;
+}
+
+export interface ExtractedTask {
+  title: string;
+  description: string;
+  priority: "low" | "medium" | "high";
+  due_date: string | null;
+  estimated_effort: "Low" | "Medium" | "High";
+}
+
+export interface RewardsOverview {
+  total_points: number;
+  current_streak: number;
+  longest_streak: number;
+  tasks_completed_today: number;
+  total_completed_tasks: number;
+  unlocked_badges: string[];
+}
+
+export interface WeeklyProductivityPoint {
+  day: string;
+  date: string;
+  completed_tasks: number;
+}
+
+export interface AnalyticsOverview {
+  total_tasks: number;
+  completed_tasks: number;
+  pending_tasks: number;
+  overdue_tasks: number;
+  completion_rate: number;
+  high_priority_tasks: number;
+  medium_priority_tasks: number;
+  low_priority_tasks: number;
+  tasks_completed_today: number;
+  tasks_completed_this_week: number;
+  current_streak: number;
+  longest_streak: number;
+  productivity_points: number;
+  weekly_productivity: WeeklyProductivityPoint[];
 }
 
 export const api = {
@@ -61,6 +125,21 @@ export const api = {
     }),
 
   me: () => request<UserProfile>("/users/me"),
+  tasks: () => request<Task[]>("/tasks"),
+  createTask: (payload: Pick<Task, "title" | "description" | "priority" | "due_date">) =>
+    request<Task>("/tasks", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateTask: (taskId: string, payload: Partial<Pick<Task, "title" | "description" | "priority" | "due_date">>) =>
+    request<Task>(`/tasks/${taskId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  deleteTask: (taskId: string) =>
+    request<void>(`/tasks/${taskId}`, { method: "DELETE" }),
+  completeTask: (taskId: string) =>
+    request<Task>(`/tasks/${taskId}/complete`, { method: "PATCH" }),
   health: () => request<{ status: string; environment?: string }>("/health"),
 
   taskInsight: (payload: TaskInsightPayload) =>
@@ -68,6 +147,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  analyzeTask: (taskId: string) =>
+    request<TaskAnalysis>(`/ai/tasks/${taskId}/analyze`, { method: "POST" }),
+  extractDocumentTasks: (content: string) =>
+    request<{ tasks: ExtractedTask[] }>("/ai/documents/tasks", {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    }),
+  rewardsOverview: () => request<RewardsOverview>("/rewards/overview"),
+  analyticsOverview: () => request<AnalyticsOverview>("/analytics/overview"),
 };
 
 export interface TaskInsightPayload {

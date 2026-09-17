@@ -4,13 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.router import api_router
+from app.db.base import Base
+from app.db.session import engine
+from app.models import User
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"[WorkPilot AI] Starting {settings.PROJECT_NAME} v{settings.VERSION} ({settings.ENVIRONMENT})")
-    # Step 1: Foundation lifespan active.
-    # Database connections and table initialization will be hooked in subsequent steps.
+    Base.metadata.create_all(bind=engine)
     yield
     print(f"[WorkPilot AI] Shutting down {settings.PROJECT_NAME}")
 

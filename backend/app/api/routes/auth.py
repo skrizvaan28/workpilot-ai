@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.schemas.user import UserCreate, UserOut
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)

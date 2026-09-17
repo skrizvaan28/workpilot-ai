@@ -12,6 +12,7 @@ import { TeamView } from '../components/dashboard/TeamView';
 import { AnalyticsView } from '../components/dashboard/AnalyticsView';
 import { SettingsView } from '../components/dashboard/SettingsView';
 import { AlertInbox } from '../components/dashboard/AlertInbox';
+import { TasksView } from '../components/dashboard/TasksView';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
 import { UploadDocumentModal } from '../components/modals/UploadDocumentModal';
 import { AskAIModal } from '../components/modals/AskAIModal';
@@ -229,14 +230,7 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'tasks' && (
-            <div className="space-y-6">
-              <MyTasksTable
-                tasks={tasks}
-                onToggleTask={handleToggleTask}
-                onOpenCreateTask={() => setIsCreateTaskOpen(true)}
-                searchFilter={searchQuery}
-              />
-            </div>
+            <TasksView />
           )}
 
           {activeTab === 'alerts' && (
