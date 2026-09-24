@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import ai, analytics, auth, health, rewards, tasks, users
+from app.api.routes import ai, analytics, auth, health, knowledge_documents, rewards, tasks, users
 
 api_router = APIRouter()
 api_router.include_router(health.router)
@@ -9,3 +9,4 @@ api_router.include_router(users.router)
 api_router.include_router(tasks.router)
 api_router.include_router(rewards.router)
 api_router.include_router(analytics.router)
+api_router.include_router(knowledge_documents.router)

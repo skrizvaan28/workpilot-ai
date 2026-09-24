@@ -8,6 +8,7 @@ import {
   FileCode,
   FileCheck,
 } from 'lucide-react';
+import { api } from '../../lib/api';
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
@@ -21,9 +22,11 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
   onTasksExtracted,
 }) => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [documentText, setDocumentText] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [autoExtractTasks, setAutoExtractTasks] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -33,23 +36,38 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
     { name: 'API_Architecture_Guidelines.md', size: '420 KB', type: 'MARKDOWN' },
   ];
 
-  const handleStartParsing = () => {
+  const handleStartParsing = async () => {
     if (!selectedFile) return;
     setIsProcessing(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const content = documentText || `WorkPilot AI knowledge base input for ${selectedFile}.\n\n- Launch onboarding improvements\n- Complete security review\n- Upgrade analytics portal\n- Evaluate internal training program`;
+      const created = await api.createKnowledgeDocument({
+        title: selectedFile.replace(/\.[^.]+$/, ''),
+        filename: selectedFile,
+        document_type: 'notes',
+        content,
+      });
+
+      if (autoExtractTasks && onTasksExtracted) {
+        onTasksExtracted(Math.max(1, Math.ceil(created.content.length / 80)));
+      }
+
       setIsProcessing(false);
       setIsCompleted(true);
-      if (onTasksExtracted) {
-        onTasksExtracted(6);
-      }
-    }, 1500);
+    } catch (err) {
+      setIsProcessing(false);
+      setError(err instanceof Error ? err.message : 'Could not save the document');
+    }
   };
 
   const handleReset = () => {
     setSelectedFile(null);
+    setDocumentText('');
     setIsProcessing(false);
     setIsCompleted(false);
+    setError(null);
     onClose();
   };
 
@@ -78,7 +96,12 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
         <div className="p-6 space-y-4">
           {!isCompleted ? (
             <>
-              {/* Dropzone */}
+              {error && (
+                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">
+                  {error}
+                </div>
+              )}
+
               <div
                 onClick={() => setSelectedFile(sampleFiles[0].name)}
                 className="border-2 border-dashed border-slate-700 hover:border-amber-400/60 rounded-xl p-6 text-center cursor-pointer transition bg-slate-950/50 group"
@@ -129,7 +152,6 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
                 </div>
               </div>
 
-              {/* AI Auto-Extraction Checkbox */}
               <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-start gap-2.5">
                 <input
                   type="checkbox"
@@ -150,6 +172,14 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               </div>
 
               {/* Action Buttons */}
+              <textarea
+                value={documentText}
+                onChange={(event) => setDocumentText(event.target.value)}
+                rows={4}
+                placeholder="Paste or summarize the document text to save into the knowledge base..."
+                className="w-full rounded-lg border border-slate-700 bg-slate-950/80 px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 resize-none"
+              />
+
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
@@ -165,7 +195,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-bold shadow-sm transition disabled:opacity-50"
                 >
                   <Sparkles size={14} />
-                  <span>{isProcessing ? 'AI Analyzing...' : 'Upload & Parse Document'}</span>
+                  <span>{isProcessing ? 'Saving...' : 'Upload & Save'}</span>
                 </button>
               </div>
             </>

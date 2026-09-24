@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_BASE_URL: str = "https://api.openai.com/v1"
     LLM_MODEL: str = "gpt-4o-mini"
+    EMBEDDING_PROVIDER: str = "local"
+    EMBEDDING_MODEL: str = "local-fallback-v1"
+    EMBEDDING_API_KEY: str = ""
+    EMBEDDING_BASE_URL: str = "https://api.openai.com/v1"
+    EMBEDDING_DIMENSION: int = 128
+    VECTOR_STORE: str = "json"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

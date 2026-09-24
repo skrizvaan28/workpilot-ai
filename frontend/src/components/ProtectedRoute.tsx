@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -15,6 +16,11 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  // Allow seamless access with fallback to demo profile if unauthenticated
+  // If not authenticated, redirect to login page
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 }
+

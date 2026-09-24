@@ -21,23 +21,36 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
+      ...(options.headers as Record<string, string> | undefined),
     },
   });
 
   if (!res.ok) {
+    // On 401 (except during login), clear the stored token and notify AuthContext
+    if (res.status === 401 && !path.startsWith("/auth/login")) {
+      clearToken();
+      window.dispatchEvent(new CustomEvent("workpilot:unauthorized"));
+    }
+
     const body = await res.json().catch(() => ({ detail: "Request failed" }));
-    const detail = body.detail;
-    const message =
-      typeof detail === "string"
-        ? detail
-        : "AI insight temporarily unavailable. Please try again.";
+    let message = "Request failed";
+    if (typeof body.detail === "string") {
+      message = body.detail;
+    } else if (Array.isArray(body.detail) && body.detail.length > 0) {
+      // FastAPI validation errors are arrays of objects with a "msg" field
+      message = (body.detail as { msg: string }[])
+        .map((item) => item.msg ?? JSON.stringify(item))
+        .join(", ");
+    } else if (typeof body.message === "string") {
+      message = body.message;
+    }
     throw new Error(message);
   }
 
   if (res.status === 204) return undefined as T;
   return res.json();
 }
+
 
 export interface UserProfile {
   id: string;
@@ -111,6 +124,90 @@ export interface AnalyticsOverview {
   weekly_productivity: WeeklyProductivityPoint[];
 }
 
+export interface KnowledgeDocument {
+  id: string;
+  user_id: string;
+  title: string;
+  filename: string;
+  document_type: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeDocumentChunk {
+  id: string;
+  document_id: string;
+  chunk_index: number;
+  content: string;
+  char_count: number;
+  token_estimate: number;
+  embedding_status: string;
+  embedding_model: string | null;
+  created_at: string;
+}
+
+export interface KnowledgeDocumentChunkResponse {
+  document_id: string;
+  total_chunks: number;
+  chunks: KnowledgeDocumentChunk[];
+}
+
+export interface SemanticSearchResult {
+  document_id: string;
+  title: string;
+  filename: string;
+  chunk_index: number;
+  content: string;
+  similarity: number;
+  embedding_model: string;
+}
+
+export interface SemanticSearchResponse {
+  query: string;
+  results: SemanticSearchResult[];
+}
+
+export interface KnowledgeDocumentSource {
+  document_id: string;
+  title: string;
+  filename: string;
+  chunk_index: number;
+  content: string;
+  similarity: number;
+  embedding_model: string;
+}
+
+export interface KnowledgeDocumentAskResponse {
+  query: string;
+  answer: string;
+  sources: KnowledgeDocumentSource[];
+  context_found: boolean;
+  total_sources: number;
+  top_similarity: number | null;
+}
+
+export interface TaskCopilotKnowledgeSource {
+  document_id: string;
+  title: string;
+  filename: string;
+  chunk_index: number;
+  content: string;
+  similarity: number;
+  embedding_model: string;
+}
+
+export interface TaskCopilotResponse {
+  answer: string;
+  suggested_steps: string[];
+  checklist: string[];
+  blockers: string[];
+  recommended_priority: string | null;
+  recommended_deadline: string | null;
+  knowledge_context_found: boolean;
+  knowledge_sources: TaskCopilotKnowledgeSource[];
+}
+
 export const api = {
   register: (full_name: string, email: string, password: string) =>
     request<UserProfile>("/auth/register", {
@@ -149,6 +246,11 @@ export const api = {
     }),
   analyzeTask: (taskId: string) =>
     request<TaskAnalysis>(`/ai/tasks/${taskId}/analyze`, { method: "POST" }),
+  taskCopilot: (taskId: string, payload: { action: string; question?: string }) =>
+    request<TaskCopilotResponse>(`/ai/tasks/${taskId}/copilot`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   extractDocumentTasks: (content: string) =>
     request<{ tasks: ExtractedTask[] }>("/ai/documents/tasks", {
       method: "POST",
@@ -156,6 +258,33 @@ export const api = {
     }),
   rewardsOverview: () => request<RewardsOverview>("/rewards/overview"),
   analyticsOverview: () => request<AnalyticsOverview>("/analytics/overview"),
+  knowledgeDocuments: () => request<KnowledgeDocument[]>("/knowledge-documents"),
+  createKnowledgeDocument: (payload: {
+    title: string;
+    filename: string;
+    document_type: string;
+    content: string;
+  }) =>
+    request<KnowledgeDocument>("/knowledge-documents", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getKnowledgeDocument: (documentId: string) =>
+    request<KnowledgeDocument>(`/knowledge-documents/${documentId}`),
+  deleteKnowledgeDocument: (documentId: string) =>
+    request<void>(`/knowledge-documents/${documentId}`, { method: "DELETE" }),
+  getKnowledgeDocumentChunks: (documentId: string) =>
+    request<KnowledgeDocumentChunkResponse>(`/knowledge-documents/${documentId}/chunks`),
+  semanticSearch: (payload: { query: string; top_k?: number }) =>
+    request<SemanticSearchResponse>("/knowledge-documents/search", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  askKnowledgeBase: (payload: { query: string; top_k?: number }) =>
+    request<KnowledgeDocumentAskResponse>("/knowledge-documents/ask", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
 
 export interface TaskInsightPayload {

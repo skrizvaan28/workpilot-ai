@@ -11,10 +11,11 @@ import {
   Pencil,
   Plus,
   Search,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
-import { api, Task, TaskAnalysis } from "../../lib/api";
+import { api, Task, TaskAnalysis, TaskCopilotResponse } from "../../lib/api";
 import { DocumentTaskExtractor } from "./DocumentTaskExtractor";
 import { ProductivityRewards } from "./ProductivityRewards";
 
@@ -123,6 +124,11 @@ export function TasksView() {
   const [analysis, setAnalysis] = useState<TaskAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
+  const [copilot, setCopilot] = useState<TaskCopilotResponse | null>(null);
+  const [copilotLoading, setCopilotLoading] = useState(false);
+  const [copilotError, setCopilotError] = useState("");
+  const [copilotAction, setCopilotAction] = useState("breakdown");
+  const [copilotPrompt, setCopilotPrompt] = useState("Break this task into smaller actionable steps.");
   const [rewardsRefreshKey, setRewardsRefreshKey] = useState(0);
   const [completionMessage, setCompletionMessage] = useState("");
 
@@ -154,6 +160,24 @@ export function TasksView() {
       setAnalysisError(err instanceof Error ? err.message : "Unable to analyze this task.");
     } finally {
       setAnalysisLoading(false);
+    }
+  }
+
+  async function runTaskCopilot(taskId = selectedTaskId) {
+    if (!taskId) return;
+    setCopilot(null);
+    setCopilotError("");
+    setCopilotLoading(true);
+    try {
+      const response = await api.taskCopilot(taskId, {
+        action: copilotAction,
+        question: copilotPrompt || undefined,
+      });
+      setCopilot(response);
+    } catch (err) {
+      setCopilotError(err instanceof Error ? err.message : "Unable to use the AI task copilot.");
+    } finally {
+      setCopilotLoading(false);
     }
   }
 
@@ -252,7 +276,7 @@ export function TasksView() {
               <div><p className="text-xs uppercase tracking-[0.18em] text-amber-400">WorkPilot AI</p><h2 className="mt-1 font-display text-lg font-semibold text-white">AI Assistant</h2><p className="mt-1 text-xs text-slate-400">Turn task context into a practical execution plan.</p></div>
             </div>
             <div className="flex w-full gap-2 sm:w-auto">
-              <select value={selectedTaskId} onChange={(event) => { setSelectedTaskId(event.target.value); setAnalysis(null); setAnalysisError(""); }} disabled={tasks.length === 0} className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-xs text-slate-300 outline-none focus:border-amber-400 sm:w-64 sm:flex-none"><option value="">{tasks.length ? "Select a task to analyze" : "No tasks available"}</option>{tasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}</select>
+              <select value={selectedTaskId} onChange={(event) => { setSelectedTaskId(event.target.value); setAnalysis(null); setAnalysisError(""); setCopilot(null); }} disabled={tasks.length === 0} className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-xs text-slate-300 outline-none focus:border-amber-400 sm:w-64 sm:flex-none"><option value="">{tasks.length ? "Select a task to analyze" : "No tasks available"}</option>{tasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}</select>
               <button onClick={() => void analyzeSelectedTask()} disabled={!selectedTaskId || analysisLoading} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-amber-500 px-3 py-2.5 text-xs font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"><Lightbulb size={14} />{analysisLoading ? "Analyzing..." : "Analyze with AI"}</button>
             </div>
           </div>
@@ -266,6 +290,167 @@ export function TasksView() {
             <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3"><p className="text-[11px] text-slate-500">Suggested priority</p><p className={`mt-1 text-sm font-semibold capitalize ${analysis.suggested_priority === "high" ? "text-rose-300" : analysis.suggested_priority === "medium" ? "text-amber-300" : "text-slate-300"}`}>{analysis.suggested_priority}</p></div><div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3"><p className="text-[11px] text-slate-500">Estimated effort</p><p className="mt-1 text-sm font-semibold text-white">{analysis.estimated_effort}</p></div><div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3"><p className="text-[11px] text-slate-500">Suggested deadline</p><p className="mt-1 text-sm font-semibold text-amber-300">{new Date(`${analysis.suggested_deadline}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p></div></div>
             <div className="grid gap-4 lg:grid-cols-3"><div><p className="text-xs font-semibold text-slate-300">Suggested subtasks</p><ul className="mt-2 space-y-2">{analysis.suggested_subtasks.map((item) => <li key={item} className="flex gap-2 text-xs text-slate-400"><Check size={14} className="mt-0.5 shrink-0 text-emerald-400" />{item}</li>)}</ul></div><div><p className="text-xs font-semibold text-slate-300">Potential blockers</p><ul className="mt-2 space-y-2">{analysis.potential_blockers.map((item) => <li key={item} className="flex gap-2 text-xs text-slate-400"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />{item}</li>)}</ul></div><div className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.06] p-3"><p className="text-xs font-semibold text-emerald-300">Recommended next action</p><p className="mt-2 text-xs leading-relaxed text-slate-300">{analysis.recommended_next_action}</p></div></div>
           </div>}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 shadow-sm">
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-800/80">
+          <div className="rounded-lg bg-amber-400/10 p-2 text-amber-300"><Sparkles size={18} /></div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-amber-400">AI Task Copilot</p>
+            <h3 className="mt-1 font-display text-lg font-semibold text-white">Task support</h3>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "breakdown", label: "Break Down Task" },
+              { key: "checklist", label: "Create Checklist" },
+              { key: "next_steps", label: "Next Steps" },
+              { key: "blockers", label: "Find Blockers" },
+              { key: "priority", label: "Suggest Priority" },
+              { key: "deadline", label: "Suggest Deadline" },
+              { key: "knowledge_context", label: "Ask Knowledge Base" },
+            ].map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setCopilotAction(option.key)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${copilotAction === option.key ? "border-amber-500/60 bg-amber-500/10 text-amber-200" : "border-slate-700 bg-slate-950/80 text-slate-300 hover:border-slate-600"}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            value={copilotPrompt}
+            onChange={(event) => setCopilotPrompt(event.target.value)}
+            rows={3}
+            className="w-full resize-none rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-white outline-none focus:border-amber-400"
+            placeholder="Ask the task copilot for breakdowns, blockers, priorities, or knowledge guidance..."
+          />
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => void runTaskCopilot()}
+              disabled={!selectedTaskId || copilotLoading}
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Sparkles size={15} />
+              {copilotLoading ? "Generating..." : "Run copilot"}
+            </button>
+          </div>
+
+          {copilotError && (
+            <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+              {copilotError}
+            </div>
+          )}
+
+          {copilotLoading && (
+            <div className="flex items-center gap-2 py-2 text-sm text-slate-400">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+              Working on your task guidance...
+            </div>
+          )}
+
+          {copilot && (
+            <div className="space-y-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.15em] text-amber-400">AI answer</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-200">{copilot.answer}</p>
+              </div>
+
+              {(copilot.recommended_priority || copilot.recommended_deadline || copilot.blockers.length > 0) && (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {copilot.recommended_priority && (
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+                      <p className="text-[11px] text-slate-500">Recommended priority</p>
+                      <p className="mt-1 text-sm font-semibold capitalize text-amber-300">{copilot.recommended_priority}</p>
+                    </div>
+                  )}
+                  {copilot.recommended_deadline && (
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+                      <p className="text-[11px] text-slate-500">Recommended deadline</p>
+                      <p className="mt-1 text-sm font-semibold text-emerald-300">{new Date(`${copilot.recommended_deadline}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</p>
+                    </div>
+                  )}
+                  {copilot.blockers.length > 0 && (
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+                      <p className="text-[11px] text-slate-500">Potential blockers</p>
+                      <p className="mt-1 text-sm font-semibold text-rose-300">{copilot.blockers.length}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {copilot.suggested_steps.length > 0 && (
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Suggested steps</p>
+                  <ul className="mt-2 space-y-2">
+                    {copilot.suggested_steps.map((step) => (
+                      <li key={step} className="flex gap-2 text-sm text-slate-300"><Check size={14} className="mt-0.5 shrink-0 text-emerald-400" />{step}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {copilot.checklist.length > 0 && (
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Checklist</p>
+                  <ul className="mt-2 space-y-2">
+                    {copilot.checklist.map((item) => (
+                      <li key={item} className="flex gap-2 text-sm text-slate-300"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-amber-400" />{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {copilot.blockers.length > 0 && (
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Blockers</p>
+                  <ul className="mt-2 space-y-2">
+                    {copilot.blockers.map((blocker) => (
+                      <li key={blocker} className="flex gap-2 text-sm text-slate-300"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />{blocker}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {copilot.knowledge_context_found && copilot.knowledge_sources.length > 0 && (
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">Knowledge sources</p>
+                  <div className="mt-2 space-y-3">
+                    {copilot.knowledge_sources.map((source) => (
+                      <div key={`${source.document_id}-${source.chunk_index}`} className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-medium text-white">{source.title}</div>
+                            <div className="text-[11px] text-slate-400 font-mono">{source.filename}</div>
+                          </div>
+                          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300">{source.similarity.toFixed(3)} relevance</span>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400">
+                          <span>Chunk #{source.chunk_index + 1}</span>
+                          <span>{source.embedding_model}</span>
+                        </div>
+                        <p className="mt-2 text-sm text-slate-300 leading-relaxed">{source.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!copilot.knowledge_context_found && (
+                <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-300">
+                  No relevant knowledge was found for this task question in the current user-scoped knowledge base.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

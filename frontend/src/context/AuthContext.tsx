@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, clearToken, getToken, setToken, UserProfile } from "../lib/api";
 
 interface AuthContextValue {
@@ -14,7 +15,16 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
+  // Core logout: clear token + user state, redirect to /login
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
+  // On mount: if a token exists, validate it by calling /api/users/me
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -24,9 +34,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api
       .me()
       .then(setUser)
-      .catch(() => clearToken())
+      .catch(() => {
+        // Token invalid or expired — clear it silently
+        clearToken();
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  // Listen for 401 events fired by api.ts when any authenticated request is rejected
+  useEffect(() => {
+    function handleUnauthorized() {
+      setUser(null);
+      navigate("/login", { replace: true });
+    }
+    window.addEventListener("workpilot:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("workpilot:unauthorized", handleUnauthorized);
+  }, [navigate]);
 
   async function login(email: string, password: string) {
     const { access_token } = await api.login(email, password);
@@ -38,11 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function register(fullName: string, email: string, password: string) {
     await api.register(fullName, email, password);
     await login(email, password);
-  }
-
-  function logout() {
-    clearToken();
-    setUser(null);
   }
 
   return (
@@ -57,4 +75,5 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
+
 

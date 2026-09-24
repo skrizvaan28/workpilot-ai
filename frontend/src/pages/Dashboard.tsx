@@ -8,6 +8,7 @@ import { AIInsightCard } from '../components/dashboard/AIInsightCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
 import { RecentActivityList } from '../components/dashboard/RecentActivityList';
 import { DocumentsView } from '../components/dashboard/DocumentsView';
+import { KnowledgeBaseView } from '../components/dashboard/KnowledgeBaseView';
 import { TeamView } from '../components/dashboard/TeamView';
 import { AnalyticsView } from '../components/dashboard/AnalyticsView';
 import { SettingsView } from '../components/dashboard/SettingsView';
@@ -241,7 +242,7 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'documents' && (
-            <DocumentsView onOpenUpload={() => setIsUploadDocOpen(true)} />
+            <KnowledgeBaseView onOpenUpload={() => setIsUploadDocOpen(true)} />
           )}
 
           {activeTab === 'analytics' && <AnalyticsView />}

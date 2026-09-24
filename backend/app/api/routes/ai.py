@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from app.api.deps import get_optional_token_subject
 from app.api.deps import get_current_user
 from app.crud.task import get_task
+from app.db.session import get_db
 from app.models.user import User
 from app.schemas.ai_document import DocumentTaskRequest, DocumentTaskResponse
 from app.schemas.ai import TaskInsightRequest, TaskInsightResponse
-from app.schemas.ai_task import TaskAnalysis
+from app.schemas.ai_task import TaskAnalysis, TaskCopilotRequest, TaskCopilotResponse
 from app.services.ai_service import generate_task_insight
-from app.services.ai_task_service import analyze_task
+from app.services.ai_task_service import analyze_task, generate_task_copilot
 from app.services.ai_document_task_service import extract_tasks
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -31,6 +33,19 @@ def analyze_existing_task(
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
     return analyze_task(task, current_user)
+
+
+@router.post("/tasks/{task_id}/copilot", response_model=TaskCopilotResponse)
+def task_copilot(
+    task_id: str,
+    payload: TaskCopilotRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> TaskCopilotResponse:
+    task = get_task(current_user.id, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return generate_task_copilot(db, task, current_user.id, payload)
 
 
 @router.post("/documents/tasks", response_model=DocumentTaskResponse)
