@@ -4,6 +4,7 @@ from app.models.knowledge_document import KnowledgeDocument, KnowledgeDocumentCh
 from app.schemas.knowledge_document import KnowledgeDocumentCreate
 from app.services.document_processing_service import chunk_text
 from app.services.embedding_service import EmbeddingService
+from app.services.vector_store import VectorStoreFactory
 
 
 def list_knowledge_documents(db: Session, user_id: str) -> list[KnowledgeDocument]:
@@ -41,21 +42,24 @@ def create_knowledge_document(
 
     chunk_items = chunk_text(document.content)
     embedding_service = EmbeddingService()
+    vector_store = VectorStoreFactory.create()
     for chunk in chunk_items:
         content = chunk["content"]
         embedding_vector = embedding_service.generate_embedding(content)
-        db.add(
-            KnowledgeDocumentChunk(
-                document_id=document.id,
-                chunk_index=chunk["chunk_index"],
-                content=content,
-                char_count=chunk["char_count"],
-                token_estimate=chunk["token_estimate"],
-                embedding_status="ready",
-                embedding_model=embedding_service.model,
-                embedding_vector_json=embedding_service.serialize_vector(embedding_vector),
-            )
+        chunk_record = KnowledgeDocumentChunk(
+            document_id=document.id,
+            chunk_index=chunk["chunk_index"],
+            content=content,
+            char_count=chunk["char_count"],
+            token_estimate=chunk["token_estimate"],
+            embedding_status="ready",
+            embedding_model=embedding_service.model,
+            embedding_vector_json=embedding_service.serialize_vector(embedding_vector),
         )
+        db.add(chunk_record)
+        if vector_store.name == "pg":
+            db.flush()
+            vector_store.store_embedding(db, chunk_record, embedding_vector)
     db.commit()
     db.refresh(document)
     return document

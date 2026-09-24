@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     EMBEDDING_BASE_URL: str = "https://api.openai.com/v1"
     EMBEDDING_DIMENSION: int = 128
     VECTOR_STORE: str = "json"
+    VECTOR_DIMENSION: int = 128
+    VECTOR_SIMILARITY_METRIC: str = "cosine"
+    VECTOR_TOP_K: int = 5
+    VECTOR_MIN_SIMILARITY: float = 0.2
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

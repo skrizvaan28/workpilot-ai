@@ -5,8 +5,22 @@ from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import UserDefinedType
 
+from app.core.config import settings
 from app.db.base import Base
+
+try:
+    from pgvector.sqlalchemy import Vector
+except ImportError:
+    class Vector(UserDefinedType):
+        cache_ok = True
+
+        def __init__(self, dimensions: int):
+            self.dimensions = dimensions
+
+        def get_col_spec(self, **_: object) -> str:
+            return f"VECTOR({self.dimensions})"
 
 
 class KnowledgeDocument(Base):
@@ -55,6 +69,9 @@ class KnowledgeDocumentChunk(Base):
     embedding_status: Mapped[str] = mapped_column(String(30), nullable=False, default="pending")
     embedding_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     embedding_vector_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    embedding_vector: Mapped[list[float] | None] = mapped_column(
+        Vector(settings.VECTOR_DIMENSION), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
