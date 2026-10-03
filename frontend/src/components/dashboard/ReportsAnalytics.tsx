@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BarChart3, CheckCircle2, Clock3, Flame, LoaderCircle, Sparkles, Target } from "lucide-react";
 import { AnalyticsOverview, api } from "../../lib/api";
+import { ErrorState, LoadingState } from "../ui/Feedback";
 
 function SummaryCard({ label, value, detail, tone, icon: Icon }: { label: string; value: string; detail: string; tone: string; icon: typeof BarChart3 }) {
   return <div className="rounded-xl border border-slate-800 bg-slate-900/75 p-4 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs text-slate-400">{label}</span><span className={`rounded-lg p-1.5 ${tone}`}><Icon size={16} /></span></div><p className="mt-3 font-display text-2xl font-semibold text-white">{value}</p><p className="mt-1 text-[11px] text-slate-500">{detail}</p></div>;
@@ -33,8 +34,8 @@ export function ReportsAnalytics() {
   return <section className="space-y-6">
     <div className="flex flex-col gap-2 border-b border-slate-800/80 pb-4"><div className="flex items-center gap-2"><BarChart3 size={20} className="text-amber-400" /><h1 className="font-display text-2xl font-bold text-white">Reports & Analytics</h1></div><p className="text-sm text-slate-400">A live view of delivery pace, task mix, and productivity momentum.</p></div>
 
-    {loading && <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900/70 py-16 text-sm text-slate-400"><LoaderCircle size={17} className="animate-spin text-amber-300" /> Calculating workspace analytics...</div>}
-    {error && <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"><span>{error}</span><button onClick={() => void loadOverview()} className="font-semibold underline">Retry</button></div>}
+    {loading && <LoadingState message="Calculating workspace analytics..." />}
+    {error && <ErrorState message="Unable to load analytics." onRetry={() => void loadOverview()} />}
 
     {!loading && !error && overview && <>
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Trash2, UploadCloud, Search, Sparkles, FolderOpen, ArrowUpRight, MessageSquareText } from 'lucide-react';
 import { api, KnowledgeDocument, SemanticSearchResult } from '../../lib/api';
+import { EmptyState, ErrorState, LoadingState } from '../ui/Feedback';
 
 interface KnowledgeBaseViewProps {
   onOpenUpload: () => void;
@@ -175,29 +176,13 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onOpenUplo
         </div>
       </form>
 
-      {loading && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-6 text-sm text-slate-300">
-          Loading your knowledge documents...
-        </div>
-      )}
+      {loading && <LoadingState message="Loading your Knowledge Base..." />}
 
-      {!loading && error && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
-          {error}
-        </div>
-      )}
+      {!loading && error && <ErrorState message="Unable to load your Knowledge Base." onRetry={() => void loadDocuments()} />}
 
-      {!loading && searchError && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
-          {searchError}
-        </div>
-      )}
+      {!loading && searchError && <ErrorState message="Unable to search the Knowledge Base." />}
 
-      {!loading && askError && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
-          {askError}
-        </div>
-      )}
+      {!loading && askError && <ErrorState message="Unable to answer that Knowledge Base question." />}
 
       <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
         <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
@@ -304,13 +289,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onOpenUplo
         </div>
       )}
 
-      {!loading && !error && !hasSearched && documents.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/60 p-8 text-center">
-          <Search size={28} className="mx-auto text-slate-500 mb-3" />
-          <h3 className="text-base font-semibold text-white">No knowledge documents yet</h3>
-          <p className="text-sm text-slate-400 mt-1">Upload a policy, brief, or reference doc to start building your knowledge base.</p>
-        </div>
-      )}
+      {!loading && !error && !hasSearched && documents.length === 0 && <EmptyState title="Your Knowledge Base is empty" message="Upload a document to get started." />}
 
       {!loading && !error && !hasSearched && documents.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

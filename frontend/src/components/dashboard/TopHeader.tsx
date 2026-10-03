@@ -17,6 +17,7 @@ import { mockNotifications } from '../../data/mockDashboardData';
 
 interface TopHeaderProps {
   onOpenMobileSidebar: () => void;
+  isMobileSidebarOpen: boolean;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenCreateTask: () => void;
@@ -30,6 +31,7 @@ interface TopHeaderProps {
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
   onOpenMobileSidebar,
+  isMobileSidebarOpen,
   searchQuery,
   onSearchChange,
   onOpenCreateTask,
@@ -74,23 +76,27 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   };
 
   return (
-    <header className="h-16 border-b sticky top-0 z-30 transition-colors bg-[#0D111A]/95 backdrop-blur-md border-slate-800/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 flex h-16 min-w-0 items-center justify-between gap-2 border-b border-slate-800/80 bg-[#0D111A]/95 px-2 backdrop-blur-md transition-colors sm:gap-4 sm:px-6 lg:px-8">
       {/* Left side: Mobile Toggle & Search */}
-      <div className="flex items-center gap-3 flex-1 max-w-xl">
+      <div className="flex min-w-0 max-w-xl flex-1 items-center gap-2 sm:gap-3">
         <button
+          type="button"
           onClick={onOpenMobileSidebar}
+          aria-expanded={isMobileSidebarOpen}
           className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
           aria-label="Open sidebar"
         >
-          <Menu size={20} />
+          <Menu size={20} aria-hidden="true" />
         </button>
 
         {/* Global Search Bar */}
-        <div className="relative w-full max-w-md">
+        <div className="relative min-w-0 w-full max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
             <Search size={16} />
           </div>
+          <label htmlFor="workspace-search" className="sr-only">Search workspace</label>
           <input
+            id="workspace-search"
             type="text"
             placeholder="Search tasks, documents, AI insights... (Ctrl + K)"
             value={searchQuery}
@@ -132,7 +138,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         <button
           onClick={onToggleTheme}
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-300/50"
         >
           {theme === 'dark' ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} />}
         </button>
@@ -141,6 +147,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
+            type="button"
+            aria-expanded={notificationsOpen}
             className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition relative"
             aria-label="Notifications"
           >
@@ -153,7 +161,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-slate-200">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-1rem)] max-w-96 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-slate-200">
               <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm text-white">Notifications</span>
@@ -207,6 +215,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setProfileOpen(!profileOpen)}
+            type="button"
+            aria-expanded={profileOpen}
             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800/70 transition"
           >
             <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-slate-950 font-bold text-xs shadow-sm">

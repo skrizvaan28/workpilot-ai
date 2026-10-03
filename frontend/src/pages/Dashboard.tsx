@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LeftSidebar } from '../components/dashboard/LeftSidebar';
 import { TopHeader } from '../components/dashboard/TopHeader';
 import { MetricCards } from '../components/dashboard/MetricCards';
@@ -28,6 +29,7 @@ import { Task, RecentActivityItem } from '../types/dashboard';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Tab State
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -133,7 +135,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className={`min-h-screen flex font-body transition-colors duration-200 ${
+      className={`workspace-shell min-h-screen flex font-body transition-colors duration-200 ${
         theme === 'dark'
           ? 'bg-[#0B0E14] text-slate-100'
           : 'bg-slate-100 text-slate-900 light-mode'
@@ -143,8 +145,8 @@ export default function Dashboard() {
       <LeftSidebar
         activeTab={activeTab}
         onSelectTab={(tab) => {
-          if (tab === 'ai-assistant') {
-            setIsAskAIOpen(true);
+          if (tab === 'copilot') {
+            navigate('/copilot');
           } else {
             setActiveTab(tab);
           }
@@ -160,6 +162,7 @@ export default function Dashboard() {
         {/* 2. TOP HEADER */}
         <TopHeader
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+          isMobileSidebarOpen={isMobileSidebarOpen}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onOpenCreateTask={() => setIsCreateTaskOpen(true)}
@@ -172,7 +175,7 @@ export default function Dashboard() {
         />
 
         {/* Dynamic Main Body Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+        <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col space-y-7 p-4 sm:p-6 lg:p-8">
           {activeTab === 'dashboard' && (
             <>
               {/* 3. DASHBOARD METRICS */}

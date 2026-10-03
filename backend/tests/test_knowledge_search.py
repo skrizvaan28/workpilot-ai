@@ -41,6 +41,13 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def reset_database():
+    # Other test modules configure the shared FastAPI app with their own
+    # in-memory database at import time. Restore this module's engine before
+    # each test so API writes and direct chunk assertions use the same store.
+    db_session.engine = engine
+    db_session.SessionLocal = TestingSessionLocal
+    app_main.engine = engine
+    app.dependency_overrides[get_db] = override_get_db
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -31,12 +31,29 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   taskCount,
   alertCount,
 }) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCloseMobile();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileOpen, onCloseMobile]);
+
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tasks', label: 'My Tasks', icon: CheckSquare, badge: taskCount },
     { id: 'alerts', label: 'Alert Inbox', icon: Bell, alertBadge: alertCount },
     { id: 'documents', label: 'Documents', icon: FileText, tag: 'RAG' },
-    { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, highlight: true },
+    { id: 'copilot', label: 'AI Copilot', icon: Bot, highlight: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'team', label: 'Team', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -54,8 +71,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 border-r transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col justify-between
-          bg-[#0C0F17] text-slate-200 border-slate-800/80
+        aria-label="Workspace navigation"
+          className={`fixed bottom-0 left-0 top-0 z-50 flex w-64 max-w-[calc(100vw-1rem)] flex-col justify-between overflow-y-auto border-r bg-[#0C0F17] text-slate-200 shadow-2xl shadow-black/20 transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:max-w-none lg:overflow-visible lg:shadow-none
+          border-slate-800/80
           ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}
       >
         {/* Top Branding Section */}
@@ -82,6 +100,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
             {/* Mobile close button */}
             <button
+              ref={closeButtonRef}
+              type="button"
               onClick={onCloseMobile}
               className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
               aria-label="Close menu"
@@ -112,14 +132,16 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               return (
                 <button
                   key={item.id}
+                  type="button"
+                  aria-current={isActive ? 'page' : undefined}
                   onClick={() => {
                     onSelectTab(item.id);
                     if (isMobileOpen) onCloseMobile();
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all group relative ${
                     isActive
-                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                      ? 'border border-amber-500/30 bg-amber-500/10 text-amber-300 shadow-sm'
+                        : 'border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
                   }`}
                 >
                   <div className="flex items-center gap-3">

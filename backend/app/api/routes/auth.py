@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token, verify_password
@@ -14,7 +15,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     if get_user_by_email(db, user_in.email):
         raise HTTPException(status_code=400, detail="Email is already registered")
-    return create_user(db, user_in)
+    try:
+        return create_user(db, user_in)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email is already registered") from None
 
 
 @router.post("/login", response_model=TokenResponse)

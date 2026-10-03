@@ -70,7 +70,7 @@ class KnowledgeDocumentChunk(Base):
     embedding_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     embedding_vector_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     embedding_vector: Mapped[list[float] | None] = mapped_column(
-        Vector(settings.VECTOR_DIMENSION), nullable=True
+        Vector(settings.VECTOR_DIMENSION), nullable=True, deferred=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False

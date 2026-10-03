@@ -7,13 +7,24 @@ from app.crud.task import get_task
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.ai_document import DocumentTaskRequest, DocumentTaskResponse
+from app.schemas.ai_copilot import CopilotRequest, CopilotResponse
 from app.schemas.ai import TaskInsightRequest, TaskInsightResponse
 from app.schemas.ai_task import TaskAnalysis, TaskCopilotRequest, TaskCopilotResponse
 from app.services.ai_service import generate_task_insight
 from app.services.ai_task_service import analyze_task, generate_task_copilot
 from app.services.ai_document_task_service import extract_tasks
+from app.services.copilot_service import handle_copilot
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+
+
+@router.post("/copilot", response_model=CopilotResponse)
+def copilot(
+    payload: CopilotRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CopilotResponse:
+    return handle_copilot(db, current_user, payload)
 
 
 @router.post("/task-insight", response_model=TaskInsightResponse)

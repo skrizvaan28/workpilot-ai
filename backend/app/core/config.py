@@ -1,3 +1,6 @@
+import secrets
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,8 +8,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "WorkPilot AI"
     VERSION: str = "0.1.0"
     ENVIRONMENT: str = "development"
-    DATABASE_URL: str = "postgresql://workpilot:workpilot@localhost:5432/workpilot"
-    SECRET_KEY: str = "dev-secret-change-me"
+    DATABASE_URL: str = ""
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
@@ -25,6 +28,26 @@ class Settings(BaseSettings):
     VECTOR_MIN_SIMILARITY: float = 0.2
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @model_validator(mode="after")
+    def validate_runtime_configuration(self):
+        if not self.DATABASE_URL.strip():
+            raise ValueError("DATABASE_URL must be configured")
+
+        environment = self.ENVIRONMENT.strip().lower()
+        if not self.SECRET_KEY.strip():
+            if environment in {"production", "prod"}:
+                raise ValueError("SECRET_KEY must be configured in production")
+            self.SECRET_KEY = secrets.token_urlsafe(32)
+
+        if environment in {"production", "prod"}:
+            insecure_secrets = {"dev-secret-change-me", "replace-this-with-a-long-random-secret"}
+            if self.SECRET_KEY in insecure_secrets or len(self.SECRET_KEY) < 32:
+                raise ValueError("SECRET_KEY must be a strong, unique value in production")
+
+        if "*" in self.cors_origin_list:
+            raise ValueError("Wildcard CORS origins are not allowed when credentials are enabled")
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

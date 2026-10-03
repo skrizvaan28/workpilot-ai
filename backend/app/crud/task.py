@@ -27,6 +27,8 @@ def create_task(owner_id: str, task_in: TaskCreate) -> TaskOut:
         priority=task_in.priority,
         due_date=task_in.due_date,
         completed=False,
+        status=task_in.status,
+        progress=task_in.progress,
         created_at=now,
         updated_at=now,
     )
@@ -47,6 +49,12 @@ def update_task(owner_id: str, task_id: str, task_in: TaskUpdate) -> TaskOut | N
         if not task or task.owner_id != owner_id:
             return None
         values = task_in.model_dump(exclude_unset=True)
+        if values.get("status") == "completed":
+            values.update({"completed": True, "progress": 100})
+        elif values.get("progress") == 100:
+            values.update({"completed": True, "status": "completed"})
+        elif values.get("status") in {"pending", "in_progress", "overdue"}:
+            values["completed"] = False
         updated = task.model_copy(update={**values, "updated_at": datetime.now(timezone.utc)})
         _tasks[task_id] = updated
         return updated
@@ -67,7 +75,12 @@ def complete_task(owner_id: str, task_id: str) -> TaskOut | None:
         if not task or task.owner_id != owner_id:
             return None
         updated = task.model_copy(
-            update={"completed": True, "updated_at": datetime.now(timezone.utc)}
+            update={
+                "completed": True,
+                "status": "completed",
+                "progress": 100,
+                "updated_at": datetime.now(timezone.utc),
+            }
         )
         _tasks[task_id] = updated
         return updated

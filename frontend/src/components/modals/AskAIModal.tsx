@@ -87,7 +87,7 @@ export const AskAIModal: React.FC<AskAIModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl h-[560px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col overflow-hidden text-slate-200">
+      <div className="flex h-[min(560px,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl">
         {/* Chat Header */}
         <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-800 bg-slate-950/60">
           <div className="flex items-center gap-3">
@@ -109,6 +109,7 @@ export const AskAIModal: React.FC<AskAIModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
           >
@@ -130,7 +131,7 @@ export const AskAIModal: React.FC<AskAIModalProps> = ({ isOpen, onClose }) => {
               )}
 
               <div
-                className={`max-w-lg rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                className={`max-w-[calc(100%-2.75rem)] break-words rounded-2xl px-4 py-3 text-xs leading-relaxed sm:max-w-lg ${
                   msg.sender === 'user'
                     ? 'bg-amber-500 text-slate-950 font-medium rounded-tr-none'
                     : 'bg-slate-950 border border-slate-800 text-slate-200 rounded-tl-none whitespace-pre-line'
@@ -197,6 +198,7 @@ export const AskAIModal: React.FC<AskAIModalProps> = ({ isOpen, onClose }) => {
             className="flex items-center gap-2"
           >
             <input
+              aria-label="Ask WorkPilot AI"
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}

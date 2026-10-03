@@ -69,6 +69,8 @@ export interface Task {
   priority: "low" | "medium" | "high";
   due_date: string | null;
   completed: boolean;
+  status: "pending" | "in_progress" | "completed" | "overdue";
+  progress: number;
   created_at: string;
   updated_at: string;
 }
@@ -208,6 +210,40 @@ export interface TaskCopilotResponse {
   knowledge_sources: TaskCopilotKnowledgeSource[];
 }
 
+export interface CopilotKnowledgeSource {
+  document_id: string;
+  title: string;
+  filename: string;
+  chunk_index: number;
+  content: string;
+  similarity: number;
+  embedding_model: string;
+}
+
+export interface CopilotWorkload {
+  total_tasks: number;
+  completed: number;
+  in_progress: number;
+  pending: number;
+  overdue: number;
+  high_priority: number;
+}
+
+export interface CopilotResponse {
+  intent: string;
+  success: boolean;
+  message: string;
+  action: string | null;
+  requires_confirmation: boolean;
+  confirmation_action: string | null;
+  tasks: Task[];
+  knowledge_sources: CopilotKnowledgeSource[];
+  workload: CopilotWorkload | null;
+  task: Task | null;
+  answer: string | null;
+  suggested_steps: string[];
+}
+
 export const api = {
   register: (full_name: string, email: string, password: string) =>
     request<UserProfile>("/auth/register", {
@@ -250,6 +286,11 @@ export const api = {
     request<TaskCopilotResponse>(`/ai/tasks/${taskId}/copilot`, {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+  copilot: (message: string) =>
+    request<CopilotResponse>("/ai/copilot", {
+      method: "POST",
+      body: JSON.stringify({ message }),
     }),
   extractDocumentTasks: (content: string) =>
     request<{ tasks: ExtractedTask[] }>("/ai/documents/tasks", {

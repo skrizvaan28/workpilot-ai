@@ -18,6 +18,7 @@ import {
 import { api, Task, TaskAnalysis, TaskCopilotResponse } from "../../lib/api";
 import { DocumentTaskExtractor } from "./DocumentTaskExtractor";
 import { ProductivityRewards } from "./ProductivityRewards";
+import { EmptyState, ErrorState, LoadingState } from "../ui/Feedback";
 
 type Priority = Task["priority"];
 type StatusFilter = "all" | "open" | "completed";
@@ -468,10 +469,10 @@ export function TasksView() {
           </div>
         </div>
 
-        {error && <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-300"><span>{error}</span><button onClick={() => void loadTasks()} className="font-semibold text-rose-200 underline">Retry</button></div>}
+        {error && <ErrorState className="mt-4" message="Unable to load tasks." onRetry={() => void loadTasks()} />}
 
         <div className="mt-4 space-y-2">
-          {loading ? <div className="flex items-center justify-center gap-2 py-14 text-sm text-slate-500"><span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" /> Loading tasks...</div> : filteredTasks.length === 0 ? <div className="flex flex-col items-center justify-center py-14 text-center"><ClipboardList size={28} className="text-slate-600" /><p className="mt-3 text-sm font-medium text-slate-300">{tasks.length === 0 ? "Your task queue is clear" : "No tasks match these filters"}</p><p className="mt-1 text-xs text-slate-500">{tasks.length === 0 ? "Add the next piece of work to get started." : "Try a different search or filter."}</p></div> : filteredTasks.map((task) => <article key={task.id} className={`group rounded-lg border border-slate-800 bg-slate-950/50 p-4 transition hover:border-slate-700 ${task.completed ? "opacity-65" : ""}`}>
+          {loading ? <LoadingState message="Loading your tasks..." /> : filteredTasks.length === 0 ? <EmptyState title={tasks.length === 0 ? "No tasks yet" : "No tasks match these filters"} message={tasks.length === 0 ? "Create your first task to start managing your work." : "Try a different search or filter."} /> : filteredTasks.map((task) => <article key={task.id} className={`group rounded-lg border border-slate-800 bg-slate-950/50 p-4 transition hover:border-slate-700 ${task.completed ? "opacity-65" : ""}`}>
             <div className="flex items-start gap-3">
               <button onClick={() => !task.completed && void completeTask(task)} disabled={task.completed} className={`mt-0.5 shrink-0 ${task.completed ? "text-emerald-400" : "text-slate-600 hover:text-amber-400"}`} aria-label={task.completed ? "Task completed" : "Mark task complete"}>{task.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}</button>
               <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><span className={`h-2 w-2 rounded-full ${task.priority === "high" ? "bg-rose-400" : task.priority === "medium" ? "bg-amber-400" : "bg-slate-500"}`} title={`${task.priority} priority`} /><h3 className={`font-medium text-white ${task.completed ? "line-through text-slate-500" : ""}`}>{task.title}</h3><span className={`rounded border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${priorityStyles[task.priority]}`}>{task.priority}</span></div>{task.description && <p className="mt-1.5 line-clamp-2 text-sm text-slate-400">{task.description}</p>}<div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">{task.due_date ? <span className="inline-flex items-center gap-1.5"><CalendarDays size={13} /> Due {new Date(`${task.due_date}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span> : <span className="inline-flex items-center gap-1.5"><CalendarDays size={13} /> No due date</span>}<span className={task.completed ? "text-emerald-400" : "text-slate-600"}>{task.completed ? "Completed" : "Open"}</span></div></div>

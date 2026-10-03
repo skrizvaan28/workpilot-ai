@@ -11,6 +11,7 @@ import {
   Info,
 } from 'lucide-react';
 import { Task, TaskUrgency } from '../../types/dashboard';
+import { EmptyState } from '../ui/Feedback';
 
 interface AlertInboxProps {
   tasks: Task[];
@@ -269,15 +270,7 @@ export const AlertInbox: React.FC<AlertInboxProps> = ({ tasks, onNavigateToTasks
 
       {/* Empty state */}
       {totalAlerts === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-            <CheckCircle2 size={32} className="text-emerald-400" />
-          </div>
-          <h3 className="text-base font-semibold text-white">All clear!</h3>
-          <p className="text-sm text-slate-400 max-w-xs">
-            No overdue or upcoming tasks right now. Keep up the great work.
-          </p>
-        </div>
+        <EmptyState title="You're all caught up" message="No overdue or upcoming tasks need your attention right now." />
       )}
 
       {/* Urgency groups */}

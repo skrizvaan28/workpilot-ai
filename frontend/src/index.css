@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  ::selection {
+    background: rgba(245, 158, 11, 0.28);
+    color: #fff7ed;
+  }
+
+  :focus-visible {
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .workspace-surface {
+    @apply rounded-2xl border border-slate-800/90 bg-slate-900/70 shadow-xl shadow-black/10;
+  }
+
+  .workspace-surface-subtle {
+    @apply rounded-xl border border-slate-800/80 bg-slate-950/45;
+  }
+
+  .workspace-heading {
+    @apply font-display text-xl font-semibold tracking-tight text-white;
+  }
+
+  .workspace-kicker {
+    @apply text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-400;
+  }
+
+  .workspace-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/10 transition duration-200 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/60 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .workspace-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-300 transition duration-200 hover:border-amber-400/50 hover:text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-300/50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .workspace-input {
+    @apply rounded-lg border border-slate-700 bg-slate-950/70 text-slate-100 outline-none transition duration-200 placeholder:text-slate-600 focus:border-amber-400/70 focus:ring-2 focus:ring-amber-400/10;
+  }
+}
+
 /* =========================================
 ROOT
 ========================================= */

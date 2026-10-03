@@ -3,6 +3,7 @@ import { Link, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Copilot from "./pages/Copilot";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import FoundationHealthCheck from "./components/FoundationHealthCheck";
 import {
@@ -717,6 +718,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/copilot"
+        element={
+          <ProtectedRoute>
+            <Copilot />
           </ProtectedRoute>
         }
       />
