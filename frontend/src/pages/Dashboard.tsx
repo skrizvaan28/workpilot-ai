@@ -15,6 +15,7 @@ import { AnalyticsView } from '../components/dashboard/AnalyticsView';
 import { SettingsView } from '../components/dashboard/SettingsView';
 import { AlertInbox } from '../components/dashboard/AlertInbox';
 import { TasksView } from '../components/dashboard/TasksView';
+import { ProductivityRewards } from '../components/dashboard/ProductivityRewards';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
 import { UploadDocumentModal } from '../components/modals/UploadDocumentModal';
 import { AskAIModal } from '../components/modals/AskAIModal';
@@ -155,6 +156,8 @@ export default function Dashboard() {
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         taskCount={pendingCount}
         alertCount={alertCount}
+        userName={displayName}
+        onLogout={logout}
       />
 
       {/* Main Content Area */}
@@ -249,6 +252,8 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'analytics' && <AnalyticsView />}
+
+          {activeTab === 'rewards' && <ProductivityRewards refreshKey={0} />}
 
           {activeTab === 'team' && <TeamView />}
 

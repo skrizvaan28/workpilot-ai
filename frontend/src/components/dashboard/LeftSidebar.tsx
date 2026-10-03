@@ -6,7 +6,10 @@ import {
   Bot,
   BarChart3,
   Users,
+  Trophy,
   Settings,
+  User,
+  LogOut,
   Sparkles,
   Zap,
   X,
@@ -21,6 +24,8 @@ interface LeftSidebarProps {
   onCloseMobile: () => void;
   taskCount: number;
   alertCount: number;
+  userName: string;
+  onLogout: () => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -30,6 +35,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onCloseMobile,
   taskCount,
   alertCount,
+  userName,
+  onLogout,
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -50,11 +57,12 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'tasks', label: 'My Tasks', icon: CheckSquare, badge: taskCount },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare, badge: taskCount },
     { id: 'alerts', label: 'Alert Inbox', icon: Bell, alertBadge: alertCount },
-    { id: 'documents', label: 'Documents', icon: FileText, tag: 'RAG' },
+    { id: 'documents', label: 'Knowledge Base', icon: FileText, tag: 'RAG' },
     { id: 'copilot', label: 'AI Copilot', icon: Bot, highlight: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'rewards', label: 'Rewards & Productivity', icon: Trophy },
     { id: 'team', label: 'Team', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -74,7 +82,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         aria-label="Workspace navigation"
           className={`fixed bottom-0 left-0 top-0 z-50 flex w-64 max-w-[calc(100vw-1rem)] flex-col justify-between overflow-y-auto border-r bg-[#0C0F17] text-slate-200 shadow-2xl shadow-black/20 transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:max-w-none lg:overflow-visible lg:shadow-none
           border-slate-800/80
-          ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}
+          ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Top Branding Section */}
         <div>
@@ -224,6 +232,28 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               Docs <ExternalLink size={10} />
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              onSelectTab('settings');
+              if (isMobileOpen) onCloseMobile();
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm text-slate-300 transition hover:bg-slate-800/60"
+          >
+            <User size={18} className="text-slate-400" />
+            <span className="min-w-0 flex-1 truncate">{userName}</span>
+            <span className="text-xs text-slate-500">Profile</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-300"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
     </>
